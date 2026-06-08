@@ -1,18 +1,11 @@
 import { View, Text, Pressable } from 'react-native';
 
 type Props = {
-  session: ReturnType<typeof import('../hooks/useSession').useSession>;
   runDebug: () => void;
 };
 
-export function Debug({ session, runDebug }: Props) {
-  if (!session.loaded) {
-    return (
-      <View>
-        <Text>Laden...</Text>
-      </View>
-    );
-  }
+export function Debug({ runDebug }: Props) {
+
 
   return (
     <View>
