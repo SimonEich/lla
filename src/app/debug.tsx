@@ -3,11 +3,11 @@ import { useDebug } from '../hooks/useDebug';
 import { Debug } from '@/components/debugcard';
 
 export default function SessionDebugScreen() {
-  const { runDebug } = useDebug();
+  const { runDebug, wordCount } = useDebug();
 
   return (
     <View style={{ flex: 1 }}>
-      <Debug runDebug={runDebug} />
+      <Debug runDebug={runDebug} wordCount={wordCount}/>
     </View>
   );
 }
