@@ -1,5 +1,5 @@
 // src/components/CardScreen.tsx
-import MultipleChoice from './MultipleChoice';
+import MultipleChoice from './levels/MultipleChoice';
 import GapFill from './levels/GapFill';
 import WordTap from './levels/WordTap';
 import FreeInput from './levels/FreeInput';

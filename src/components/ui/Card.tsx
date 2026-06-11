@@ -15,12 +15,12 @@ export function Card({ children, flex }: Props) {
 
 const styles = StyleSheet.create({
   card: {
-    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#ffffff',
     borderRadius: 20,
-    padding: 24,
+    marginHorizontal: '5%',
+    marginVertical: '20%',
     shadowColor: '#000',
     shadowOpacity: 0.06,
     shadowRadius: 12,
