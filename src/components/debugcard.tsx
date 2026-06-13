@@ -7,20 +7,22 @@ type Data = {
 
 type Props = {
   runDebug: () => void;
-  data: Data
+  data: Data;
+  runSession: () => void;
+  countActive: number;
 };
 
-export function Debug({ runDebug, data }: Props) {
-
-
+export function Debug({ runDebug, data, runSession, countActive }: Props) {
   return (
     <View>
-      <Text>Hello Debug</Text>
       <Text>Word count: {data.wordCount}</Text>
-      <Text>Forst Word: {data.firstWord}</Text>
-
+      <Text>First word: {data.firstWord}</Text>
+      <Text>Active words: {countActive}</Text>
       <Pressable onPress={runDebug}>
         <Text>Run Debug</Text>
+      </Pressable>
+      <Pressable onPress={runSession}>
+        <Text>Run Session</Text>
       </Pressable>
     </View>
   );

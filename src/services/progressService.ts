@@ -1,3 +1,4 @@
+// Here we have all the information about the words.
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type WordProgress = {
@@ -73,4 +74,34 @@ export const progressService = {
       sentenceIndex: wp.sentenceIndex + 1,
     };
   },
+
+// get all active word IDs
+  getActiveIds(progress: Record<string, WordProgress>): string[] {
+    return Object.values(progress)
+      .filter(wp => wp.state === 'active')
+      .map(wp => wp.wordId);
+  },
+
+  // activate a single word
+  activate(progress: Record<string, WordProgress>, wordId: string): Record<string, WordProgress> {
+    return {
+      ...progress,
+      [wordId]: {
+        wordId,
+        state: 'active',
+        level: 1,
+        correctCount: 0,
+        sentenceIndex: 0,
+        difficult: false,
+      },
+    };
+  },
+
+  // count active words
+  getActiveCount(progress: Record<string, WordProgress>): number {
+    return Object.values(progress).filter(wp => wp.state === 'active').length;
+  },
+
+  
+
 };
