@@ -1,19 +1,32 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { MultiData } from '@/types/session';
 
-export function MultipleChoice() {
+type Props = {
+  data: MultiData;
+};
+
+export function MultipleChoice({ data }: Props) {
+  const question = data.progress.level === 1
+    ? data.questionData.target   // show Spanish → pick German
+    : data.questionData.native;  // show German → pick Spanish
+
   return (
     <View style={styles.container}>
 
       <Card flex>
-        <Text style={styles.question}>ser</Text>
+        <Text style={styles.question}>{question}</Text>
       </Card>
 
       <View style={styles.optionsRow}>
-        <Button label="sein" onPress={() => console.log('sein')} />
-        <Button label="gehen" onPress={() => console.log('gehen')} />
-        <Button label="haben" onPress={() => console.log('haben')} />
+        {data.answerArray.map((word, index) => (
+          <Button
+            key={index}
+            label={data.progress.level === 1 ? word.native : word.target}
+            onPress={() => console.log('pressed:', word.native)}
+          />
+        ))}
       </View>
 
     </View>
