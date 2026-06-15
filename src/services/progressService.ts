@@ -75,12 +75,11 @@ export const progressService = {
     };
   },
 
-// get all active word IDs
-  getActiveIds(progress: Record<string, WordProgress>): string[] {
-    return Object.values(progress)
-      .filter(wp => wp.state === 'active')
-      .map(wp => wp.wordId);
-  },
+// get all active word progress objects
+getActive(progress: Record<string, WordProgress>): WordProgress[] {
+  return Object.values(progress)
+    .filter(wp => wp.state === 'active');
+},
 
   // activate a single word
   activate(progress: Record<string, WordProgress>, wordId: string): Record<string, WordProgress> {
@@ -102,6 +101,6 @@ export const progressService = {
     return Object.values(progress).filter(wp => wp.state === 'active').length;
   },
 
-  
+
 
 };

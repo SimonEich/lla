@@ -5,11 +5,11 @@ import { Debug } from '@/components/debugcard';
 
 export default function SessionDebugScreen() {
   const { runDebug, data } = useDebug();
-  const { runSession, countActive } = useSession();
+  const { initSession, countActive } = useSession();
 
   return (
     <View style={{ flex: 1 }}>
-      <Debug runDebug={runDebug} data={data} runSession={runSession} countActive={countActive}/>
+      <Debug runDebug={runDebug} data={data} runSession={initSession} countActive={countActive}/>
     </View>
   );
 }

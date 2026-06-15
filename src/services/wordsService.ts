@@ -8,4 +8,7 @@ export const wordsService = {
     return result;
   },
 
+  async getByIds(ids: string[]): Promise<Word[]> {
+    return words.filter(w => ids.includes(w.id));
+  },
 };
