@@ -1,8 +1,11 @@
+import { useDebug } from '@/hooks/useDebug';
 import { useRouter } from 'expo-router';
 import { Pressable, Text, View, StyleSheet } from 'react-native';
 
 export default function HomeScreen() {
+
   const router = useRouter();
+
   return (
     <View>
       <Pressable onPress={() => router.push('/debug')}>

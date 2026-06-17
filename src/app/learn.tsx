@@ -1,15 +1,11 @@
 import { View, Text } from 'react-native';
-import { useSession } from '@/hooks/useSession';
-import { MultipleChoice } from '@/components/levels/MultipleChoice';
 
 export default function LearnScreen() {
   return (
-    <View>
-      <Text>
-        Learn screen
-      </Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Learn screen</Text>
     </View>
-  )
+  );
 }
 
 //  const { data } = useSession();

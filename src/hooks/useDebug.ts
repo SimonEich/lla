@@ -27,3 +27,7 @@ export function useDebug() {
 
   return { runDebug, data: { wordCount, firstWord, count } };
 }
+
+export function runDebugConsole() {
+  return (console.log('[runConsoleDebug]'))
+}
