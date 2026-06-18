@@ -1,9 +1,17 @@
 import CardScreen from '@/components/CardScreen';
-import { View, Text } from 'react-native';
+import { useSession } from '@/hooks/useSession';
+import { View, Text, Pressable } from 'react-native';
 
 export default function LearnScreen() {
+  const { data, runSession } = useSession();
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+    <View>
+      <Pressable onPress={() => runSession()}>
+        <Text>
+          runSession
+        </Text>
+      </Pressable>
       <Text>Learn screen</Text>
       <CardScreen/>
     </View>

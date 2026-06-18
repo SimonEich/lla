@@ -3,52 +3,78 @@ import { progressService } from "@/services/progressService";
 import { wordsService } from "@/services/wordsService";
 import { getRandomIndex, buildAnswerArray } from "@/utils/random";
 import { MultiData } from "@/types/session";
+import { initProgress } from "@/utils/initProgress";
 
 export function useSession() {
   const [data, setData] = useState<MultiData | null>(null);
 
   useEffect(() => {
-    initSession();
+    runSession();
   }, []);
 
-  async function initSession() {
-    // 1. load progress
-    const progress = await progressService.load();
+  async function runSession() {
+    console.log('[useSession] Starting the Session...');
+    
+    try {
+      // 1. Run and AWAIT your initialization utility to seed words if needed
+      await initProgress();
 
-    // 2. get active words
-    const active = progressService.getActive(progress);
-    const activeIDs = active.map(wp => wp.wordId);
-    const numActive = active.length;
-    const activeData = await wordsService.getByIds(activeIDs);
+      // 2. Load the freshly synced progress records
+      const progress = await progressService.load();
 
-    // 3. pick random word + distractors + sentence
-    const randomNumber = getRandomIndex(numActive);
+      // 3. Extract the active words
+      const active = progressService.getActive(progress);
+      
+      if (!active || active.length === 0) {
+        console.warn('[useSession] No active words found even after initialization.');
+        return;
+      }
 
-    const chosenWord = activeData[randomNumber.correct];
-    const chosenProgress = active[randomNumber.correct];
-    const chosenSentence = chosenWord.sentences[randomNumber.sentence];
-    const answerArray = buildAnswerArray(
-      activeData[randomNumber.correct],
-      activeData[randomNumber.distractor1],
-      activeData[randomNumber.distractor2],
-    );
+      const activeIDs = active.map(wp => wp.wordId);
+      const numActive = active.length;
+      const activeData = await wordsService.getByIds(activeIDs);
 
-    console.log('[useSession] chosen word:', chosenWord.native);
-    console.log('[useSession] level:', chosenProgress.level);
-    console.log('[useSession] sentence:', chosenSentence);
-    console.log('[useSession] answerArray:', answerArray.map(w => w.native));
+      // 4. Pick random word + distractors + sentence
+      const randomNumber = getRandomIndex(numActive);
 
-    // 4. build data object based on level
-    const level = chosenProgress.level;
+      const chosenWord = activeData[randomNumber.correct];
+      const chosenProgress = active[randomNumber.correct];
+      
+      // Safety validation
+      if (!chosenWord || !chosenProgress) {
+        console.error('[useSession] Could not resolve chosen word or progress record.', { randomNumber });
+        return;
+      }
 
-    setData({
-      questionData: chosenWord,
-      answerData: chosenWord,
-      sentence: chosenSentence,
-      progress: chosenProgress,
-      answerArray,
-    });
+      const chosenSentence = chosenWord.sentences?.[randomNumber.sentence] || "No context sentence found.";
+      
+      const answerArray = buildAnswerArray(
+        activeData[randomNumber.correct],
+        activeData[randomNumber.distractor1],
+        activeData[randomNumber.distractor2],
+      );
+
+      // Debugging Logs
+      console.log('[useSession] SUCCESS! chosen word:', chosenWord.native);
+      console.log('[useSession] number of active Words:', activeData.length);
+      console.log('[useSession] level:', chosenProgress.level);
+      console.log('[useSession] sentence:', chosenSentence);
+      console.log('[useSession] Randomnumber:', randomNumber);
+      console.log('[useSession] answerArray:', answerArray.map(w => w?.native));
+
+      // 5. Build data object based on level
+      setData({
+        questionData: chosenWord,
+        answerData: chosenWord,
+        sentence: chosenSentence,
+        progress: chosenProgress,
+        answerArray,
+      });
+
+    } catch (error) {
+      console.error('[useSession] Fatal execution crash caught:', error);
+    }
   }
 
-  return { initSession, data };
+  return { runSession, data };
 }
