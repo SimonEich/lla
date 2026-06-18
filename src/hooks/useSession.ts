@@ -19,7 +19,7 @@ export function useSession() {
       // 1. Run and AWAIT your initialization utility to seed words if needed
       await initProgress();
 
-      // 2. Load the freshly synced progress records
+      // 2. Load the freshly synced progress records 
       const progress = await progressService.load();
 
       // 3. Extract the active words
@@ -46,7 +46,8 @@ export function useSession() {
         return;
       }
 
-      const chosenSentence = chosenWord.sentences?.[randomNumber.sentence] || "No context sentence found.";
+      // 🌟 FIX: Pass the whole Sentence object instead of just the text string string
+      const chosenSentence = chosenWord.sentences[randomNumber.sentence];
       
       const answerArray = buildAnswerArray(
         activeData[randomNumber.correct],
@@ -58,17 +59,16 @@ export function useSession() {
       console.log('[useSession] SUCCESS! chosen word:', chosenWord.native);
       console.log('[useSession] number of active Words:', activeData.length);
       console.log('[useSession] level:', chosenProgress.level);
-      console.log('[useSession] sentence:', chosenSentence);
-      console.log('[useSession] Randomnumber:', randomNumber);
+      console.log('[useSession] sentence object:', chosenSentence);
       console.log('[useSession] answerArray:', answerArray.map(w => w?.native));
 
-      // 5. Build data object based on level
+      // 5. Build data object matching your exact MultiData structure
       setData({
-        questionData: chosenWord,
-        answerData: chosenWord,
-        sentence: chosenSentence,
-        progress: chosenProgress,
-        answerArray,
+        questionData: chosenWord, // Word object
+        answerData: chosenWord,   // Word object
+        sentence: chosenSentence, // Passed as Sentence object
+        progress: chosenProgress, // WordProgress object
+        answerArray,              // Word[] array
       });
 
     } catch (error) {

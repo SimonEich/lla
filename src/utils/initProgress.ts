@@ -21,5 +21,7 @@ export async function initProgress() {
     });
 
     await progressService.save(updatedProgress);
+
+    
   }
 }
