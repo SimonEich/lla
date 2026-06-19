@@ -6,7 +6,9 @@
     "orientation": "portrait",
     "scheme": "lla",
     "userInterfaceStyle": "automatic",
-    "ios": {},
+    "ios": {
+      "bundleIdentifier": "com.simoneich2.lla"
+    },
     "android": {
       "predictiveBackGestureEnabled": false
     },
