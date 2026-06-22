@@ -44,11 +44,19 @@ export function getRandomIndex(length: number): {
   // Assuming each word has up to 6 context sentences (index 0 to 5)
   const sentence = Math.floor(Math.random() * 6);
 
-  // 4. Fixed: Return a structured object instead of comma-separated parentheses
   return {
     correct: correctNumber,
     distractor1,
     distractor2,
     sentence
   };
+}
+
+export function buildAnswerArray(correct: Word, d1: Word, d2: Word): Word[] {
+  const arr = [correct, d1, d2];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
 }

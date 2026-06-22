@@ -16,11 +16,9 @@ export function Button({ label, onPress, variant = 'default' }: Props) {
 
 const styles = StyleSheet.create({
   btn: {
-    flex: 1,
     borderRadius: 16,
-    height: 80,
+    height: 64,
     alignItems: 'center',
-    marginBottom: '30%',
     justifyContent: 'center',
     borderWidth: 1.5,
   },
