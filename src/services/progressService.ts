@@ -63,6 +63,7 @@ export const progressService = {
       correctCount: 0,
       sentenceIndex: wp.sentenceIndex + 1,
       state: mastered ? 'mastered' : 'active',
+      difficult: false,
     };
   },
 

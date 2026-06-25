@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { progressService, WordProgress } from "@/services/progressService";
 import { progressRepo, wordsRepo } from "@/repositories";
+import { statsService } from "@/services/statsService";
+import { settingsService } from "@/services/settingsService";
 import { getRandomIndex, buildAnswerArray } from "@/utils/random";
 import { MultiData } from "@/types/session";
 import { Word } from "@/data/words";
@@ -10,31 +12,39 @@ const cache = {
   progress: null as Record<string, WordProgress> | null,
   words: null as Word[] | null,
   wordMap: null as Map<string, Word> | null,
+  maxStackSize: 30,
 };
 
 async function ensureLoaded() {
   if (!cache.progress) {
     cache.progress = await progressRepo.load();
+    const settings = await settingsService.load();
+    cache.maxStackSize = settings.maxStackSize;
   }
   if (!cache.words) {
     cache.words = await wordsRepo.getAll();
     cache.wordMap = new Map(cache.words.map(w => [w.id, w]));
 
-    // Seed initial active words if needed
     const active = progressService.getActive(cache.progress!);
     if (active.length < 10) {
       const starter = cache.words.slice(0, 10);
       starter.forEach(w => {
         cache.progress = progressService.activate(cache.progress!, w.id);
       });
-      progressRepo.save(cache.progress!); // fire-and-forget
+      progressRepo.save(cache.progress!);
     }
   }
 }
 
-export function useSession() {
+type Options = {
+  difficultOnly?: boolean;
+};
+
+export function useSession(options: Options = {}) {
+  const { difficultOnly = false } = options;
   const [data, setData] = useState<MultiData | null>(null);
   const [activeCount, setActiveCount] = useState(0);
+  const [empty, setEmpty] = useState(false);
   const isMounted = useRef(true);
 
   useEffect(() => {
@@ -49,34 +59,55 @@ export function useSession() {
 
       const progress = cache.progress!;
       const wordMap = cache.wordMap!;
-      const active = progressService.getActive(progress);
 
-      if (active.length < 3) {
-        console.warn('[useSession] Not enough active words.');
-        return;
+      let pool = progressService.getActive(progress);
+      if (difficultOnly) {
+        pool = pool.filter(wp => wp.difficult);
+        if (pool.length === 0) {
+          if (isMounted.current) setEmpty(true);
+          return;
+        }
       }
 
-      // Build activeData directly from map — O(1) per lookup
-      const activeData = active
+      if (pool.length < 3) {
+        // For distractor fallback: use all active words
+        const allActive = progressService.getActive(progress);
+        if (allActive.length < 3) {
+          console.warn('[useSession] Not enough active words.');
+          return;
+        }
+      }
+
+      const allActive = progressService.getActive(progress);
+      const allActiveData = allActive
         .map(wp => wordMap.get(wp.wordId))
         .filter((w): w is Word => !!w);
 
-      if (activeData.length < 3) return;
+      const poolData = difficultOnly
+        ? pool.map(wp => wordMap.get(wp.wordId)).filter((w): w is Word => !!w)
+        : allActiveData;
 
-      const randomNumber = getRandomIndex(activeData.length);
+      if (poolData.length === 0) return;
 
-      const chosenWord = activeData[randomNumber.correct];
-      const chosenProgress = active.find(wp => wp.wordId === chosenWord.id)!;
+      // Pick correct word from pool, distractors from all active
+      const correctIdx = Math.floor(Math.random() * poolData.length);
+      const chosenWord = poolData[correctIdx];
+      const chosenProgress = pool.find(wp => wp.wordId === chosenWord.id)!;
       const sentenceIndex = chosenProgress.sentenceIndex % chosenWord.sentences.length;
 
-      const answerArray = buildAnswerArray(
-        chosenWord,
-        activeData[randomNumber.distractor1],
-        activeData[randomNumber.distractor2],
-      );
+      // Pick 2 distractors from all active (different from correct)
+      const distractorPool = allActiveData.filter(w => w.id !== chosenWord.id);
+      const d1 = distractorPool[Math.floor(Math.random() * distractorPool.length)];
+      const d2Candidates = distractorPool.filter(w => w.id !== d1?.id);
+      const d2 = d2Candidates[Math.floor(Math.random() * d2Candidates.length)];
+
+      if (!d1 || !d2) return;
+
+      const answerArray = buildAnswerArray(chosenWord, d1, d2);
 
       if (isMounted.current) {
-        setActiveCount(activeData.length);
+        setEmpty(false);
+        setActiveCount(allActiveData.length);
         setData({
           word: chosenWord,
           sentence: chosenWord.sentences[sentenceIndex],
@@ -87,9 +118,7 @@ export function useSession() {
     } catch (error) {
       console.error('[useSession] Error:', error);
     }
-  }, []);
-
-  const MAX_STACK = 30;
+  }, [difficultOnly]);
 
   const applyAndAdvance = useCallback((
     updater: (wp: WordProgress) => WordProgress
@@ -100,11 +129,11 @@ export function useSession() {
     const updated = updater(oldWp);
     cache.progress = { ...cache.progress, [updated.wordId]: updated };
 
-    // Add a new word whenever a level up or mastered event happened
+    // Add a new word when leveling up (up to maxStackSize)
     const didLevelUp = updated.level > oldWp.level || updated.state === 'mastered';
     if (didLevelUp && cache.words) {
-      const activeCount = progressService.getActive(cache.progress).length;
-      if (activeCount < MAX_STACK) {
+      const currentActive = progressService.getActive(cache.progress).length;
+      if (currentActive < cache.maxStackSize) {
         const inProgress = new Set(Object.keys(cache.progress));
         const nextWord = cache.words.find(w => !inProgress.has(w.id));
         if (nextWord) {
@@ -114,6 +143,7 @@ export function useSession() {
     }
 
     progressRepo.save(cache.progress);
+    statsService.recordAnswer();
     runSession();
   }, [data, runSession]);
 
@@ -122,5 +152,5 @@ export function useSession() {
   const swipeLeft  = useCallback(() => applyAndAdvance(progressService.markWrong),       [applyAndAdvance]);
   const swipeDown  = useCallback(() => applyAndAdvance(progressService.markDifficult),   [applyAndAdvance]);
 
-  return { runSession, swipeRight, swipeUp, swipeLeft, swipeDown, data, activeCount };
+  return { runSession, swipeRight, swipeUp, swipeLeft, swipeDown, data, activeCount, empty };
 }
